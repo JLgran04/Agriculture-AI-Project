@@ -1,6 +1,7 @@
 streamlit
-tensorflow
+tensorflow-cpu==2.15.0
+keras==2.15.0
+numpy<2
 pillow
-numpy
 google-generativeai
 python-dotenv
