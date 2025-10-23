@@ -1,7 +1,6 @@
 streamlit
 tensorflow
-keras
 pillow
 numpy
 google-generativeai
-python
+python-dotenv
