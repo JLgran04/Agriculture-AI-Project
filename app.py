@@ -1,21 +1,37 @@
-﻿import streamlit as st
-from PIL import Image
+import os
+import streamlit as st
 import numpy as np
-from tensorflow.keras.preprocessing import image
+from PIL import Image
 from tensorflow.keras.models import load_model
 import google.generativeai as genai
 from dotenv import load_dotenv
-import os
 
-# Load API key
+# ---------------------------
+# Setup
+# ---------------------------
+st.set_page_config(page_title="Smart Agriculture AI", page_icon="🌿", layout="wide")
+
+# Load .env locally (no effect on Streamlit Cloud unless you add a .env file;
+# on Cloud use Settings → Secrets)
 load_dotenv()
-genai.configure(api_key=os.getenv(AIzaSyCIsD_AEfWIvfSI5zR3Uv29e0czSAkeNdI))
 
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+else:
+    gemini_model = None  # we'll handle this gracefully below
+
+# ---------------------------
 # Load Models
+# ---------------------------
+# Ensure your repo has: models/soil_moisture_model.keras and models/plant_disease_model.keras
 soil_model = load_model("models/soil_moisture_model.keras")
 plant_model = load_model("models/plant_disease_model.keras")
 
+# ---------------------------
 # Class Labels
+# ---------------------------
 soil_class_labels = {0: "dry", 1: "moist", 2: "wet"}
 plant_class_labels = {
     0: "Corn (Cercospora leaf spot - Gray leaf spot)",
@@ -41,39 +57,57 @@ plant_class_labels = {
     21: "Tomato (Healthy)"
 }
 
-# Image Preprocessing
-def preprocess_image(img: Image.Image, target_size=(150,150)):
+# ---------------------------
+# Image Preprocessing (PIL + NumPy; no keras.preprocessing)
+# ---------------------------
+def preprocess_image(img: Image.Image, target_size=(150, 150)):
     img = img.resize(target_size)
-    img_array = image.img_to_array(img) / 255.0
-    return np.expand_dims(img_array, axis=0)
+    arr = np.array(img).astype("float32") / 255.0   # HWC, [0..1]
+    arr = np.expand_dims(arr, axis=0)               # NHWC
+    return arr
 
+# ---------------------------
 # Prediction Functions
-def predict_soil(img):
+# ---------------------------
+def predict_soil(img: Image.Image):
     preds = soil_model.predict(preprocess_image(img))
-    i = np.argmax(preds[0])
-    return soil_class_labels[i], preds[0][i]
+    idx = int(np.argmax(preds[0]))
+    prob = float(preds[0][idx])
+    return soil_class_labels.get(idx, "Unknown"), prob
 
-def predict_plant(img):
+def predict_plant(img: Image.Image):
     preds = plant_model.predict(preprocess_image(img))
-    i = np.argmax(preds[0])
-    return plant_class_labels[i], preds[0][i]
+    idx = int(np.argmax(preds[0]))
+    prob = float(preds[0][idx])
+    return plant_class_labels.get(idx, "Unknown"), prob
 
+# ---------------------------
 # Gemini Explanation
-def explain_prediction(label, category):
-    prompt = f"""
-    You are an agriculture expert. Explain in simple, human-friendly language what it means when
-    the {category} prediction is "{label}". Include practical advice or interpretation for a farmer.
-    """
-    response = genai.GenerativeModel("gemini-1.5-flash").generate_content(prompt)
-    return response.text.strip()
+# ---------------------------
+def explain_prediction(label: str, category: str) -> str:
+    if not gemini_model:
+        return ("Gemini key not found. Add GEMINI_API_KEY in Streamlit Secrets "
+                "to enable natural-language advice.")
+    prompt = (
+        f"You are an agriculture expert. Explain in clear, farmer-friendly language "
+        f"what it means when the {category} prediction is \"{label}\". "
+        f"Include practical, step-by-step advice."
+    )
+    try:
+        resp = gemini_model.generate_content(prompt)
+        return (resp.text or "").strip()
+    except Exception as e:
+        return f"Gemini explanation unavailable right now: {e}"
 
-# --- Streamlit Interface ---
-st.set_page_config(page_title="Smart Agriculture AI", page_icon="🌿", layout="wide")
+# ---------------------------
+# UI
+# ---------------------------
+st.markdown("<h1 style='text-align:center; color:#4CAF50;'>🌱 Smart Agriculture AI</h1>",
+            unsafe_allow_html=True)
+st.write("### Analyze soil moisture and detect plant diseases with AI, plus Gemini advice.")
 
-st.markdown("<h1 style='text-align:center; color:#4CAF50;'>🌱 Smart Agriculture AI</h1>", unsafe_allow_html=True)
-st.write("### Analyze soil moisture and detect plant diseases using Artificial Intelligence & Gemini AI explanations.")
+col1, col2 = st.columns(2, gap="large")
 
-col1, col2 = st.columns(2)
 with col1:
     choice = st.radio("Input method:", ("📁 Upload Image", "📸 Use Camera"))
     img = None
@@ -82,27 +116,28 @@ with col1:
         if uploaded_file:
             img = Image.open(uploaded_file).convert("RGB")
     else:
-        cam_img = st.camera_input("Take a live photo")
+        cam_img = st.camera_input("Take a photo")
         if cam_img:
             img = Image.open(cam_img).convert("RGB")
 
 with col2:
-    if img:
+    if img is not None:
         st.image(img, caption="Input Image", use_column_width=True)
 
 st.markdown("---")
-if img:
+
+if img is not None:
     category = st.radio("Select Prediction Type:", ["🌍 Soil Moisture", "🌾 Plant Disease"])
     if st.button("🔍 Analyze"):
-        with st.spinner("AI analyzing..."):
+        with st.spinner("Analyzing..."):
             if category == "🌍 Soil Moisture":
                 label, prob = predict_soil(img)
                 explanation = explain_prediction(label, "soil moisture")
             else:
                 label, prob = predict_plant(img)
                 explanation = explain_prediction(label, "plant disease")
-            
+
             st.success(f"### ✅ Prediction: **{label}** (Confidence: {prob:.2f})")
-            st.info(f"💬 **Gemini AI Explanation:**\n\n{explanation}")
+            st.info(f"💬 **Advice:**\n\n{explanation}")
 else:
     st.warning("Please upload or capture an image to continue.")
