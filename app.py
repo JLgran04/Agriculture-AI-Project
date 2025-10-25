@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # Page Configuration
 # -------------------------------------------------
 st.set_page_config(
-    page_title="Smart Agriculture AI",
+    page_title="Nabta AI",
     page_icon="🌿",
     layout="wide"
 )
@@ -153,8 +153,7 @@ st.markdown(
 st.markdown(
     """
     <div class="main-header">
-        <h1>🌿 Smart Agriculture AI Assistant</h1>
-        <p>Image-based soil moisture & plant disease analysis with bilingual field guidance.</p>
+        <h1>Nabta AI</h1>
     </div>
     """,
     unsafe_allow_html=True
@@ -401,4 +400,5 @@ if analyze_clicked and img is not None:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
