@@ -139,12 +139,13 @@ def explain_prediction(label: str, category: str) -> str:
             "Add GEMINI_API_KEY in Streamlit Secrets to enable this."
         )
 
-    prompt = (
-        f"You are an agriculture expert. Explain in clear, farmer-friendly language "
-        f"what it means when the {category} prediction is \"{label}\". "
-        f"Give practical next steps (watering, isolation, treatment, prevention). "
-        f"Keep it simple and direct."
-    )
+   prompt = (
+    f"You are an agriculture expert who speaks both English and Arabic fluently. "
+    f"Explain in Arabic what it means when the {category} prediction is \"{label}\". "
+    f"Write the explanation in Modern Standard Arabic, suitable for farmers. "
+    f"Include short practical advice or steps to follow."
+)
+
 
     try:
         resp = gemini_model.generate_content(prompt)
@@ -207,6 +208,7 @@ if img is not None:
 
 else:
     st.warning("Please upload or capture an image to continue.")
+
 
 
 
