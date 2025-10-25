@@ -141,3 +141,4 @@ if img is not None:
             st.info(f"💬 **Advice:**\n\n{explanation}")
 else:
     st.warning("Please upload or capture an image to continue.")
+
