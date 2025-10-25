@@ -71,38 +71,34 @@ st.markdown(
         margin-bottom: .5rem;
     }
 
-    .result-card {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 1rem 1.2rem;
-        border: 1px solid #d1d5db;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
-        margin-bottom: 1rem;
-    }
+   .result-card {
+    background: linear-gradient(90deg, #2e7d32 0%, #66bb6a 100%);
+    border-radius: 14px;
+    padding: 1.2rem 1.5rem;
+    border: none;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
 
-    .result-label {
-        font-weight: 600;
-        font-size: 1.1rem;
-        color: #2e7d32;
-        margin-bottom: .25rem;
-    }
+.result-label {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #ffffff;
+    margin-bottom: .25rem;
+}
 
-    .confidence {
-        font-size: 0.9rem;
-        color: #4b5563;
-        margin-bottom: 0.75rem;
-    }
+.confidence {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 0.75rem;
+}
 
-    .advice-wrapper {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 1rem 1rem;
-        font-size: 0.9rem;
-        color: #1f2937;
-        line-height: 1.5rem;
-        white-space: pre-wrap;
-    }
+
+   .advice-wrapper {
+    background: #ffffff;
+    border: 2px solid #2e7d32;
+
     .advice-header {
         font-weight: 600;
         margin-bottom: .5rem;
@@ -400,6 +396,7 @@ if analyze_clicked and img is not None:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
