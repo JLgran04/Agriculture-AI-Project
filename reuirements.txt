@@ -5,3 +5,5 @@ numpy<2
 pillow
 google-generativeai
 python-dotenv
+protobuf==3.20.3
+h5py<3.10
