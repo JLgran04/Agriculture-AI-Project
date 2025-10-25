@@ -15,7 +15,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# UI Design layout
+# -------------------------------------------------
+# Custom UI Styles
+# -------------------------------------------------
 st.markdown(
     """
     <style>
@@ -71,33 +73,43 @@ st.markdown(
         margin-bottom: .5rem;
     }
 
-   .result-card {
-    background: linear-gradient(90deg, #2e7d32 0%, #66bb6a 100%);
-    border-radius: 14px;
-    padding: 1.2rem 1.5rem;
-    border: none;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.1);
-    margin-bottom: 1rem;
-    color: #ffffff;
-}
+    /* Result card where we show prediction + confidence */
+    .result-card {
+        background: linear-gradient(90deg, #2e7d32 0%, #66bb6a 100%);
+        border-radius: 14px;
+        padding: 1.2rem 1.5rem;
+        border: none;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        color: #ffffff;
+    }
 
-.result-label {
-    font-weight: 600;
-    font-size: 1.2rem;
-    color: #ffffff;
-    margin-bottom: .25rem;
-}
+    .result-label {
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: #ffffff;
+        margin-bottom: .25rem;
+    }
 
-.confidence {
-    font-size: 1rem;
-    color: rgba(255,255,255,0.9);
-    margin-bottom: 0.75rem;
-}
+    .confidence {
+        font-size: 1rem;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 0.75rem;
+    }
 
-
-   .advice-wrapper {
-    background: #ffffff;
-    border: 2px solid #2e7d32;
+    /* White advice box for English */
+    .advice-wrapper {
+        background: #ffffff;
+        border: 2px solid #2e7d32;
+        border-radius: 10px;
+        padding: 1rem 1rem;
+        font-size: 0.9rem;
+        color: #1f2937;
+        line-height: 1.5rem;
+        white-space: pre-wrap;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+        margin-bottom: 1rem;
+    }
 
     .advice-header {
         font-weight: 600;
@@ -106,20 +118,22 @@ st.markdown(
         color: #374151;
     }
 
+    /* Arabic block, RTL */
     .rtl-block {
         direction: rtl;
         text-align: right;
-        background: #fff;
-        border-radius: 8px;
-        border: 1px solid #d1d5db;
-        padding: .75rem .8rem;
+        background: #ffffff;
+        border-radius: 10px;
+        border: 2px solid #2e7d32;
+        padding: .9rem .9rem;
         margin-top: .75rem;
         font-size: 0.9rem;
-        line-height: 1.5rem;
+        line-height: 1.6rem;
         color: #1f2937;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.05);
     }
 
+    /* Big green call-to-action button */
     .analyze-button button {
         width: 100% !important;
         border-radius: 10px !important;
@@ -130,6 +144,7 @@ st.markdown(
         box-shadow: 0 10px 24px rgba(46,125,50,.4) !important;
     }
 
+    /* Warning box */
     .warning-box {
         background: #fff7ed;
         border: 1px solid #fdba74;
@@ -150,6 +165,7 @@ st.markdown(
     """
     <div class="main-header">
         <h1>🌿 Nabta AI</h1>
+        <p>Soil moisture & plant health guidance, in English + العربية.</p>
     </div>
     """,
     unsafe_allow_html=True
@@ -163,7 +179,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    # If this model gives 404, switch to "gemini-pro-latest"
+    # If this model gives 404 in logs, switch to "gemini-pro-latest"
     gemini_model = genai.GenerativeModel("gemini-flash-latest")
 else:
     gemini_model = None
@@ -347,7 +363,7 @@ if img is not None:
         st.markdown('</div>', unsafe_allow_html=True)
 else:
     st.markdown(
-        '<div class="warning-box"> Please provide an image first to run analysis.</div>',
+        '<div class="warning-box">Please provide an image first to run analysis.</div>',
         unsafe_allow_html=True
     )
 
@@ -363,11 +379,10 @@ if analyze_clicked and img is not None:
             label, prob = predict_plant(img)
             explanation_raw = explain_prediction(label, "plant disease")
 
-    # Split English / Arabic sections for nicer display boxes
+    # Split English / Arabic for nicer layout
     english_part = ""
     arabic_part = ""
 
-    # Heuristic split based on the headings we force in the prompt
     if "### Arabic Explanation" in explanation_raw:
         parts = explanation_raw.split("### Arabic Explanation")
         english_part = parts[0].replace("### English Explanation", "").strip()
@@ -375,29 +390,31 @@ if analyze_clicked and img is not None:
     else:
         english_part = explanation_raw
 
-    st.markdown('<div class="result-card">', unsafe_allow_html=True)
+    # ✅ White text prediction card (inline style so Streamlit doesn't override)
     st.markdown(
         f"""
-        <div class="result-label">✅ Prediction: <span style="color:#000">{label}</span></div>
-        <div class="confidence">Confidence: {prob:.2f}</div>
+        <div class="result-card">
+            <div class="result-label">
+                ✅ Prediction:
+                <span style="color:#ffffff;">{label}</span>
+            </div>
+            <div class="confidence">
+                Confidence: {prob:.2f}
+            </div>
+        </div>
         """,
         unsafe_allow_html=True
     )
 
+    # English advice box
     st.markdown('<div class="advice-wrapper">', unsafe_allow_html=True)
     st.markdown('<div class="advice-header">English Guidance</div>', unsafe_allow_html=True)
     st.markdown(english_part, unsafe_allow_html=False)
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # Arabic advice box
     if arabic_part:
         st.markdown('<div class="rtl-block">', unsafe_allow_html=True)
         st.markdown('<b>الإرشادات بالعربية</b><br>', unsafe_allow_html=True)
         st.markdown(arabic_part, unsafe_allow_html=False)
         st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-
-
-
-
