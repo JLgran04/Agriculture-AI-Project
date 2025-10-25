@@ -300,11 +300,11 @@ with left_col:
 
     input_method = st.radio(
         "Choose how to provide an image:",
-        ("📁 Upload Image", "📸 Use Camera")
+        ("Upload Image", "Use Camera")
     )
 
     img = None
-    if input_method == "📁 Upload Image":
+    if input_method == "Upload Image":
         uploaded = st.file_uploader(
             "Upload a soil or plant image",
             type=["jpg", "jpeg", "png"]
@@ -320,7 +320,7 @@ with left_col:
 
 with right_col:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown('<h3>👀 Preview & Task</h3>', unsafe_allow_html=True)
+    st.markdown('<h3>Preview & Task</h3>', unsafe_allow_html=True)
 
     if img is not None:
         st.image(img, caption="Preview", use_column_width=True)
@@ -333,7 +333,7 @@ with right_col:
     st.markdown('<div class="section-title">What do you want to analyze?</div>', unsafe_allow_html=True)
     task_type = st.radio(
         "",
-        ["🌍 Soil Moisture", "🌾 Plant Disease"],
+        ["Soil Moisture", "Plant Disease"],
         horizontal=True
     )
 
@@ -348,11 +348,11 @@ analyze_clicked = False
 if img is not None:
     with st.container():
         st.markdown('<div class="analyze-button">', unsafe_allow_html=True)
-        analyze_clicked = st.button("🔍 Analyze Image with AI")
+        analyze_clicked = st.button("Analyze Image with AI")
         st.markdown('</div>', unsafe_allow_html=True)
 else:
     st.markdown(
-        '<div class="warning-box">📸 Please provide an image first to run analysis.</div>',
+        '<div class="warning-box"> Please provide an image first to run analysis.</div>',
         unsafe_allow_html=True
     )
 
@@ -361,7 +361,7 @@ else:
 # -------------------------------------------------
 if analyze_clicked and img is not None:
     with st.spinner("Analyzing image and generating advice..."):
-        if task_type == "🌍 Soil Moisture":
+        if task_type == "Soil Moisture":
             label, prob = predict_soil(img)
             explanation_raw = explain_prediction(label, "soil moisture")
         else:
@@ -401,3 +401,4 @@ if analyze_clicked and img is not None:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
