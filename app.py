@@ -28,7 +28,7 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel("models/gemini-1.5-flash")
+    gemini_model = genai.GenerativeModel("models/gemini-pro")
 else:
     gemini_model = None  # We'll handle missing key gracefully
 
@@ -206,4 +206,5 @@ if img is not None:
 
 else:
     st.warning("Please upload or capture an image to continue.")
+
 
