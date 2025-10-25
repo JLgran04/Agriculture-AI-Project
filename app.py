@@ -2,9 +2,10 @@ import os
 import streamlit as st
 import numpy as np
 from PIL import Image
-from tensorflow.keras.models import load_model
+import keras
 import google.generativeai as genai
 from dotenv import load_dotenv
+
 
 # ---------------------------
 # Setup
@@ -141,4 +142,5 @@ if img is not None:
             st.info(f"💬 **Advice:**\n\n{explanation}")
 else:
     st.warning("Please upload or capture an image to continue.")
+
 
