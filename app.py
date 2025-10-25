@@ -14,7 +14,7 @@ st.markdown(
     "<h1 style='text-align:center; color:#4CAF50;'>🌱 Smart Agriculture AI</h1>",
     unsafe_allow_html=True
 )
-st.write("### Analyze soil moisture and detect plant diseases with AI and Gemini bilingual explanations.")
+st.write("### Analyze soil moisture and detect plant diseases with AI and get English + Arabic field advice powered by Gemini.")
 
 # -------------------------------------------------
 # Environment / API Key
@@ -24,6 +24,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
+    # if gemini-flash-latest gives 404 for you, try gemini-pro-latest
     gemini_model = genai.GenerativeModel("gemini-flash-latest")
 else:
     gemini_model = None
@@ -49,7 +50,11 @@ except Exception as e:
 # -------------------------------------------------
 # Class Labels
 # -------------------------------------------------
-soil_class_labels = {0: "dry", 1: "moist", 2: "wet"}
+soil_class_labels = {
+    0: "dry",
+    1: "moist",
+    2: "wet"
+}
 
 plant_class_labels = {
     0: "Corn (Cercospora leaf spot - Gray leaf spot)",
@@ -79,36 +84,56 @@ plant_class_labels = {
 # Image Preprocessing
 # -------------------------------------------------
 def preprocess_image(img: Image.Image, target_size=(150, 150)):
+    """
+    Resize to model input size, normalize to [0,1], add batch dimension.
+    Returns shape (1, H, W, C)
+    """
     img = img.resize(target_size)
-    arr = np.array(img).astype("float32") / 255.0
-    arr = np.expand_dims(arr, axis=0)
+    arr = np.array(img).astype("float32") / 255.0  # HWC
+    arr = np.expand_dims(arr, axis=0)              # 1,H,W,C
     return arr
 
 # -------------------------------------------------
 # Prediction Functions
 # -------------------------------------------------
 def predict_soil(img: Image.Image):
+    """
+    Run soil moisture classifier.
+    Returns (label, confidence).
+    If model failed to load, return the error message instead of crashing.
+    """
     if soil_model is None:
         return f"[Soil model not loaded: {soil_model_error}]", 0.0
+
     preds = soil_model.predict(preprocess_image(img))
     idx = int(np.argmax(preds[0]))
     prob = float(preds[0][idx])
-    return soil_class_labels.get(idx, "Unknown"), prob
+    label = soil_class_labels.get(idx, "Unknown")
+    return label, prob
 
 def predict_plant(img: Image.Image):
+    """
+    Run plant disease classifier.
+    Returns (label, confidence).
+    If model failed to load, return the error message instead of crashing.
+    """
     if plant_model is None:
         return f"[Plant model not loaded: {plant_model_error}]", 0.0
+
     preds = plant_model.predict(preprocess_image(img))
     idx = int(np.argmax(preds[0]))
     prob = float(preds[0][idx])
-    return plant_class_labels.get(idx, "Unknown"), prob
+    label = plant_class_labels.get(idx, "Unknown")
+    return label, prob
 
 # -------------------------------------------------
-# Gemini Explanation (Bilingual: English + Arabic)
+# Gemini Explanation (Bilingual, Deep / Actionable)
 # -------------------------------------------------
 def explain_prediction(label: str, category: str) -> str:
     """
-    Uses Gemini to generate bilingual (English + Arabic) explanations.
+    Uses Gemini to generate bilingual (English + Arabic) advice.
+    English first, then Arabic.
+    The Arabic should be in Modern Standard Arabic and very practical.
     """
     if not gemini_model:
         return (
@@ -116,12 +141,22 @@ def explain_prediction(label: str, category: str) -> str:
         )
 
     prompt = (
-        f"You are an agriculture expert fluent in both English and Arabic. "
-        f"Explain what it means when the {category} prediction is \"{label}\". "
-        f"First write a short explanation in English, then write the same explanation "
-        f"in Modern Standard Arabic, each under separate headings: "
-        f"'English Explanation' and 'Arabic Explanation'. "
-        f"Keep the tone simple and helpful for farmers."
+        f"You are an experienced agricultural field advisor who helps farmers in real conditions. "
+        f"The AI system predicted {category} = \"{label}\".\n\n"
+        f"Your job:\n"
+        f"1. Explain what this result means and why it matters.\n"
+        f"2. Give clear, practical next steps the farmer should take in the next 24 hours.\n"
+        f"3. Give prevention tips for the next few days.\n"
+        f"4. If it is a disease, explain if the crop should be isolated, sprayed, pruned, or monitored.\n"
+        f"5. If it is soil moisture, give watering guidance: how much, how often, and what to watch for.\n\n"
+        f"Answer in TWO sections:\n\n"
+        f"### English Explanation\n"
+        f"- Write in simple English for a non-technical farmer.\n"
+        f"- Use bullet points for actions.\n\n"
+        f"### Arabic Explanation (الفهم بالعربية)\n"
+        f"- اكتب شرحاً تفصيلياً باللغة العربية الفصحى السهلة.\n"
+        f"- استخدم نقاط واضحة لخطوات العمل.\n"
+        f"- اجعل النص عملي جداً (مثل: اسقِ التربة الآن / افحص الأوراق غداً / اعزل النبتة إذا كانت مصابة).\n"
     )
 
     try:
@@ -142,7 +177,10 @@ with col1:
     img = None
 
     if choice == "📁 Upload Image":
-        uploaded = st.file_uploader("Upload a soil or plant image", type=["jpg", "jpeg", "png"])
+        uploaded = st.file_uploader(
+            "Upload a soil or plant image",
+            type=["jpg", "jpeg", "png"]
+        )
         if uploaded:
             img = Image.open(uploaded).convert("RGB")
     else:
@@ -159,13 +197,19 @@ with col2:
 
 st.markdown("---")
 
+# -------------------------------------------------
 # Prediction & Output
+# -------------------------------------------------
 if img is not None:
     st.subheader("🔬 AI Analysis")
-    category = st.radio("Select prediction type:", ["🌍 Soil Moisture", "🌾 Plant Disease"])
+    category = st.radio(
+        "Select prediction type:",
+        ["🌍 Soil Moisture", "🌾 Plant Disease"]
+    )
 
     if st.button("🔍 Analyze"):
         with st.spinner("AI is analyzing your image..."):
+            # run prediction
             if category == "🌍 Soil Moisture":
                 label, prob = predict_soil(img)
                 explanation = explain_prediction(label, "soil moisture")
@@ -173,7 +217,8 @@ if img is not None:
                 label, prob = predict_plant(img)
                 explanation = explain_prediction(label, "plant disease")
 
+            # show results
             st.success(f"### ✅ Prediction: **{label}** (Confidence: {prob:.2f})")
-            st.info(f"💬 **Gemini Explanation:**\n\n{explanation}")
+            st.info(f"💬 **Gemini Advice (English + العربية):**\n\n{explanation}")
 else:
     st.warning("Please upload or capture an image to continue.")
