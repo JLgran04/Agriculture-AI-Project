@@ -23,16 +23,14 @@ if GEMINI_API_KEY:
 else:
     gemini_model = None  # we'll handle this gracefully below
 
-# ---------------------------
-# Load Models
-# ---------------------------
-# Ensure your repo has: models/soil_moisture_model.keras and models/plant_disease_model.keras
-soil_model = load_model("models/soil_moisture_model.keras")
-plant_model = load_model("models/plant_disease_model.keras")
 
-# ---------------------------
+# Load Models
+
+soil_model = keras.models.load_model("models/soil_moisture_model.keras")
+plant_model = keras.models.load_model("models/plant_disease_model.keras")
+
 # Class Labels
-# ---------------------------
+
 soil_class_labels = {0: "dry", 1: "moist", 2: "wet"}
 plant_class_labels = {
     0: "Corn (Cercospora leaf spot - Gray leaf spot)",
@@ -142,5 +140,6 @@ if img is not None:
             st.info(f"💬 **Advice:**\n\n{explanation}")
 else:
     st.warning("Please upload or capture an image to continue.")
+
 
 
