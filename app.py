@@ -153,7 +153,7 @@ st.markdown(
 st.markdown(
     """
     <div class="main-header">
-        <h1>Nabta AI</h1>
+        <h1>🌿 Nabta AI 🌿</h1>
     </div>
     """,
     unsafe_allow_html=True
@@ -400,5 +400,6 @@ if analyze_clicked and img is not None:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
