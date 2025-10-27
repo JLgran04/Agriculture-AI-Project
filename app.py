@@ -165,7 +165,7 @@ st.markdown(
     """
     <div class="main-header">
         <h1>🌿 Nabta AI</h1>
-        <p>Working towards creating a greener Kuwait.</p>
+        <p>Working towards creating a healthier, greener, and sustainable Kuwait.</p>
     </div>
     """,
     unsafe_allow_html=True
@@ -418,5 +418,6 @@ if analyze_clicked and img is not None:
         st.markdown('<b>الإرشادات بالعربية</b><br>', unsafe_allow_html=True)
         st.markdown(arabic_part, unsafe_allow_html=False)
         st.markdown('</div>', unsafe_allow_html=True)
+
 
 
