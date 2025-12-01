@@ -359,7 +359,7 @@ analyze_clicked = False
 if img is not None:
     with st.container():
         st.markdown('<div class="analyze-button">', unsafe_allow_html=True)
-        analyze_clicked = st.button("Analyze Image with AI")
+        analyze_clicked = st.button("Analyze Image with Nabta")
         st.markdown('</div>', unsafe_allow_html=True)
 else:
     st.markdown(
@@ -418,6 +418,7 @@ if analyze_clicked and img is not None:
         st.markdown('<b>الإرشادات بالعربية</b><br>', unsafe_allow_html=True)
         st.markdown(arabic_part, unsafe_allow_html=False)
         st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
